@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .summary, .patterns, .report {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Personal Budget Tracker</h2>
+        
+        <form id="incomeForm">
+            <h3>Add Income</h3>
+            <label for="incomeAmount">Amount:</label>
+            <input type="number" id="incomeAmount" required>
+            <label for="incomeDate">Date:</label>
+            <input type="date" id="incomeDate" required>
+            <button type="submit">Add Income</button>
+        </form>
+        
+        <form id="expenseForm">
+            <h3>Add Expense</h3>
+            <label for="expenseCategory">Category:</label>
+            <select id="expenseCategory" required>
+                <option value="Rent">Rent</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Entertainment">Entertainment</option>
+            </select>
+            <label for="expenseAmount">Amount:</label>
+            <input type="number" id="expenseAmount" required>
+            <label for="expenseDate">Date:</label>
+            <input type="date" id="expenseDate" required>
+            <button type="submit">Add Expense</button>
+        </form>
+        
+        <div class="summary">
+            <h3>Budget Summary</h3>
+            <p id="totalIncome">Total Income: $0.00</p>
+            <p id="totalExpenses">Total Expenses: $0.00</p>
+            <p id="balance">Balance: $0.00</p>
+        </div>
+        
+        <div class="patterns">
+            <h3>Spending Patterns</h3>
+            <ul id="expenseList"></ul>
+        </div>
+        
+        <div class="report">
+            <h3>Monthly Report</h3>
+            <label for="reportMonth">Month:</label>
+            <input type="month" id="reportMonth">
+            <button onclick="generateReport()">Generate Report</button>
+            <div id="monthlyReport"></div>
+        </div>
+    </div>
+    
+    <script>
+        let income = 0;
+        let expenses = [];
+
+        document.getElementById('incomeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const amount = parseFloat(document.getElementById('incomeAmount').value);
+            const date = document.getElementById('incomeDate').value;
+            income += amount;
+            updateSummary();
+            alert(`Added income: $${amount.toFixed(2)} on ${date}`);
+        });
+
+        document.getElementById('expenseForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const category = document.getElementById('expenseCategory').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const date = document.getElementById('expenseDate').value;
+            expenses.push({category, amount, date});
+            updateSummary();
+            updateExpenseList();
+            alert(`Added expense: ${category} - $${amount.toFixed(2)} on ${date}`);
+        });
+
+        function updateSummary() {
+            const totalExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
+            const balance = income - totalExpenses;
+            document.getElementById('totalIncome').textContent = `Total Income: $${income.toFixed(2)}`;
+            document.getElementById('totalExpenses').textContent = `Total Expenses: $${totalExpenses.toFixed(2)}`;
+            document.getElementById('balance').textContent = `Balance: $${balance.toFixed(2)}`;
+        }
+
+        function updateExpenseList() {
+            const expenseList = document.getElementById('expenseList');
+            expenseList.innerHTML = '';
+            expenses.forEach(expense => {
+                const li = document.createElement('li');
+                li.textContent = `${expense.category}: $${expense.amount.toFixed(2)} on ${expense.date}`;
+                expenseList.appendChild(li);
+            });
+        }
+
+        function generateReport() {
+            const reportMonth = document.getElementById('reportMonth').value;
+            if (!reportMonth) {
+                alert('Please select a month');
+                return;
+            }
+            const [year, month] = reportMonth.split('-');
+            const monthlyIncome = income; // Assuming all income is in the selected month for simplicity
+            const monthlyExpenses = expenses.filter(expense => {
+                const [expenseYear, expenseMonth] = expense.date.split('-');
+                return expenseYear === year && expenseMonth === month;
+            });
+            const totalMonthlyExpenses = monthlyExpenses.reduce((total, expense) => total + expense.amount, 0);
+            const balance = monthlyIncome - totalMonthlyExpenses;
+
+            const reportDiv = document.getElementById('monthlyReport');
+            reportDiv.innerHTML = `
+                <p>Total Income: $${monthlyIncome.toFixed(2)}</p>
+                <p>Total Expenses: $${totalMonthlyExpenses.toFixed(2)}</p>
+                <p>Balance: $${balance.toFixed(2)}</p>
+                <h4>Expenses by Category:</h4>
+            `;
+            const categoryExpenses = monthlyExpenses.reduce((acc, expense) => {
+                if (!acc[expense.category]) acc[expense.category] = 0;
+                acc[expense.category] += expense.amount;
+                return acc;
+            }, {});
+            for (const [category, amount] of Object.entries(categoryExpenses)) {
+                const p = document.createElement('p');
+                p.textContent = `${category}: $${amount.toFixed(2)}`;
+                reportDiv.appendChild(p);
+            }
+        }
+    </script>
+</body>
+</html>

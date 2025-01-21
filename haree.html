@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Grade Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .summary, .statistics {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Student Grade Calculator</h2>
+        
+        <form id="gradeForm">
+            <h3>Enter Course Marks</h3>
+            <div id="courses">
+                <div class="course">
+                    <label for="courseName1">Course Name:</label>
+                    <input type="text" id="courseName1" class="courseName" required>
+                    <label for="marks1">Marks:</label>
+                    <input type="number" id="marks1" class="marks" required>
+                    <label for="weight1">Weight (%):</label>
+                    <input type="number" id="weight1" class="weight" required>
+                </div>
+            </div>
+            <button type="button" onclick="addCourse()">Add Another Course</button>
+            <button type="submit">Calculate Grades</button>
+        </form>
+        
+        <div class="summary">
+            <h3>Final Grades</h3>
+            <ul id="gradeSummary"></ul>
+        </div>
+        
+        <div class="statistics">
+            <h3>Statistics</h3>
+            <p id="averageGrade">Average Grade: N/A</p>
+            <p id="totalWeight">Total Weight: N/A</p>
+        </div>
+    </div>
+    
+    <script>
+        let courseCount = 1;
+
+        function addCourse() {
+            courseCount++;
+            const courseDiv = document.createElement('div');
+            courseDiv.classList.add('course');
+            courseDiv.innerHTML = `
+                <label for="courseName${courseCount}">Course Name:</label>
+                <input type="text" id="courseName${courseCount}" class="courseName" required>
+                <label for="marks${courseCount}">Marks:</label>
+                <input type="number" id="marks${courseCount}" class="marks" required>
+                <label for="weight${courseCount}">Weight (%):</label>
+                <input type="number" id="weight${courseCount}" class="weight" required>
+            `;
+            document.getElementById('courses').appendChild(courseDiv);
+        }
+
+        document.getElementById('gradeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const courseNames = document.querySelectorAll('.courseName');
+            const marks = document.querySelectorAll('.marks');
+            const weights = document.querySelectorAll('.weight');
+            let totalMarks = 0;
+            let totalWeight = 0;
+            let gradeSummary = '';
+            for (let i = 0; i < courseNames.length; i++) {
+                const courseName = courseNames[i].value;
+                const mark = parseFloat(marks[i].value);
+                const weight = parseFloat(weights[i].value);
+                totalMarks += mark * (weight / 100);
+                totalWeight += weight;
+                gradeSummary += `<li>${courseName}: ${mark} (Weight: ${weight}%)</li>`;
+            }
+            const averageGrade = totalMarks / (totalWeight / 100);
+            document.getElementById('gradeSummary').innerHTML = gradeSummary;
+            document.getElementById('averageGrade').textContent = `Average Grade: ${averageGrade.toFixed(2)}`;
+            document.getElementById('totalWeight').textContent = `Total Weight: ${totalWeight}%`;
+            
+            // Store results in local storage
+            const results = {
+                grades: gradeSummary,
+                average: averageGrade.toFixed(2),
+                weight: totalWeight
+            };
+            localStorage.setItem('gradeCalculatorResults', JSON.stringify(results));
+        });
+
+        // Load results from local storage
+        window.onload = function() {
+            const storedResults = localStorage.getItem('gradeCalculatorResults');
+            if (storedResults) {
+                const results = JSON.parse(storedResults);
+                document.getElementById('gradeSummary').innerHTML = results.grades;
+                document.getElementById('averageGrade').textContent = `Average Grade: ${results.average}`;
+                document.getElementById('totalWeight').textContent = `Total Weight: ${results.weight}%`;
+            }
+        };
+    </script>
+</body>
+</html>

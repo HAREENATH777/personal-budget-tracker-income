@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Grade Calculator</title>
+    <title>Personal Budget Tracker</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -38,101 +38,136 @@
         button:hover {
             background-color: #0056b3;
         }
-        .summary, .statistics {
+        .summary, .patterns, .report {
             margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Student Grade Calculator</h2>
+        <h2>Personal Budget Tracker</h2>
         
-        <form id="gradeForm">
-            <h3>Enter Course Marks</h3>
-            <div id="courses">
-                <div class="course">
-                    <label for="courseName1">Course Name:</label>
-                    <input type="text" id="courseName1" class="courseName" required>
-                    <label for="marks1">Marks:</label>
-                    <input type="number" id="marks1" class="marks" required>
-                    <label for="weight1">Weight (%):</label>
-                    <input type="number" id="weight1" class="weight" required>
-                </div>
-            </div>
-            <button type="button" onclick="addCourse()">Add Another Course</button>
-            <button type="submit">Calculate Grades</button>
+        <form id="incomeForm">
+            <h3>Add Income</h3>
+            <label for="incomeAmount">Amount:</label>
+            <input type="number" id="incomeAmount" required>
+            <label for="incomeDate">Date:</label>
+            <input type="date" id="incomeDate" required>
+            <button type="submit">Add Income</button>
+        </form>
+        
+        <form id="expenseForm">
+            <h3>Add Expense</h3>
+            <label for="expenseCategory">Category:</label>
+            <select id="expenseCategory" required>
+                <option value="Rent">Rent</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Entertainment">Entertainment</option>
+            </select>
+            <label for="expenseAmount">Amount:</label>
+            <input type="number" id="expenseAmount" required>
+            <label for="expenseDate">Date:</label>
+            <input type="date" id="expenseDate" required>
+            <button type="submit">Add Expense</button>
         </form>
         
         <div class="summary">
-            <h3>Final Grades</h3>
-            <ul id="gradeSummary"></ul>
+            <h3>Budget Summary</h3>
+            <p id="totalIncome">Total Income: $0.00</p>
+            <p id="totalExpenses">Total Expenses: $0.00</p>
+            <p id="balance">Balance: $0.00</p>
         </div>
         
-        <div class="statistics">
-            <h3>Statistics</h3>
-            <p id="averageGrade">Average Grade: N/A</p>
-            <p id="totalWeight">Total Weight: N/A</p>
+        <div class="patterns">
+            <h3>Spending Patterns</h3>
+            <ul id="expenseList"></ul>
+        </div>
+        
+        <div class="report">
+            <h3>Monthly Report</h3>
+            <label for="reportMonth">Month:</label>
+            <input type="month" id="reportMonth">
+            <button onclick="generateReport()">Generate Report</button>
+            <div id="monthlyReport"></div>
         </div>
     </div>
     
     <script>
-        let courseCount = 1;
+        let income = 0;
+        let expenses = [];
 
-        function addCourse() {
-            courseCount++;
-            const courseDiv = document.createElement('div');
-            courseDiv.classList.add('course');
-            courseDiv.innerHTML = `
-                <label for="courseName${courseCount}">Course Name:</label>
-                <input type="text" id="courseName${courseCount}" class="courseName" required>
-                <label for="marks${courseCount}">Marks:</label>
-                <input type="number" id="marks${courseCount}" class="marks" required>
-                <label for="weight${courseCount}">Weight (%):</label>
-                <input type="number" id="weight${courseCount}" class="weight" required>
-            `;
-            document.getElementById('courses').appendChild(courseDiv);
-        }
-
-        document.getElementById('gradeForm').addEventListener('submit', function(event) {
+        document.getElementById('incomeForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            const courseNames = document.querySelectorAll('.courseName');
-            const marks = document.querySelectorAll('.marks');
-            const weights = document.querySelectorAll('.weight');
-            let totalMarks = 0;
-            let totalWeight = 0;
-            let gradeSummary = '';
-            for (let i = 0; i < courseNames.length; i++) {
-                const courseName = courseNames[i].value;
-                const mark = parseFloat(marks[i].value);
-                const weight = parseFloat(weights[i].value);
-                totalMarks += mark * (weight / 100);
-                totalWeight += weight;
-                gradeSummary += `<li>${courseName}: ${mark} (Weight: ${weight}%)</li>`;
-            }
-            const averageGrade = totalMarks / (totalWeight / 100);
-            document.getElementById('gradeSummary').innerHTML = gradeSummary;
-            document.getElementById('averageGrade').textContent = `Average Grade: ${averageGrade.toFixed(2)}`;
-            document.getElementById('totalWeight').textContent = `Total Weight: ${totalWeight}%`;
-            
-            // Store results in local storage
-            const results = {
-                grades: gradeSummary,
-                average: averageGrade.toFixed(2),
-                weight: totalWeight
-            };
-            localStorage.setItem('gradeCalculatorResults', JSON.stringify(results));
+            const amount = parseFloat(document.getElementById('incomeAmount').value);
+            const date = document.getElementById('incomeDate').value;
+            income += amount;
+            updateSummary();
+            alert(`Added income: $${amount.toFixed(2)} on ${date}`);
         });
 
-        // Load results from local storage
-        window.onload = function() {
-            const storedResults = localStorage.getItem('gradeCalculatorResults');
-            if (storedResults) {
-                const results = JSON.parse(storedResults);
-                document.getElementById('gradeSummary').innerHTML = results.grades;
-                document.getElementById('averageGrade').textContent = `Average Grade: ${results.average}`;
-                document.getElementById('totalWeight').textContent = `Total Weight: ${results.weight}%`;
+        document.getElementById('expenseForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const category = document.getElementById('expenseCategory').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const date = document.getElementById('expenseDate').value;
+            expenses.push({category, amount, date});
+            updateSummary();
+            updateExpenseList();
+            alert(`Added expense: ${category} - $${amount.toFixed(2)} on ${date}`);
+        });
+
+        function updateSummary() {
+            const totalExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
+            const balance = income - totalExpenses;
+            document.getElementById('totalIncome').textContent = `Total Income: $${income.toFixed(2)}`;
+            document.getElementById('totalExpenses').textContent = `Total Expenses: $${totalExpenses.toFixed(2)}`;
+            document.getElementById('balance').textContent = `Balance: $${balance.toFixed(2)}`;
+        }
+
+        function updateExpenseList() {
+            const expenseList = document.getElementById('expenseList');
+            expenseList.innerHTML = '';
+            expenses.forEach(expense => {
+                const li = document.createElement('li');
+                li.textContent = `${expense.category}: $${expense.amount.toFixed(2)} on ${expense.date}`;
+                expenseList.appendChild(li);
+            });
+        }
+
+        function generateReport() {
+            const reportMonth = document.getElementById('reportMonth').value;
+            if (!reportMonth) {
+                alert('Please select a month');
+                return;
             }
-        };
+            const [year, month] = reportMonth.split('-');
+            const monthlyIncome = income; // Assuming all income is in the selected month for simplicity
+            const monthlyExpenses = expenses.filter(expense => {
+                const [expenseYear, expenseMonth] = expense.date.split('-');
+                return expenseYear === year && expenseMonth === month;
+            });
+            const totalMonthlyExpenses = monthlyExpenses.reduce((total, expense) => total + expense.amount, 0);
+            const balance = monthlyIncome - totalMonthlyExpenses;
+
+            const reportDiv = document.getElementById('monthlyReport');
+            reportDiv.innerHTML = `
+                <p>Total Income: $${monthlyIncome.toFixed(2)}</p>
+                <p>Total Expenses: $${totalMonthlyExpenses.toFixed(2)}</p>
+                <p>Balance: $${balance.toFixed(2)}</p>
+                <h4>Expenses by Category:</h4>
+            `;
+            const categoryExpenses = monthlyExpenses.reduce((acc, expense) => {
+                if (!acc[expense.category]) acc[expense.category] = 0;
+                acc[expense.category] += expense.amount;
+                return acc;
+            }, {});
+            for (const [category, amount] of Object.entries(categoryExpenses)) {
+                const p = document.createElement('p');
+                p.textContent = `${category}: $${amount.toFixed(2)}`;
+                reportDiv.appendChild(p);
+            }
+        }
     </script>
 </body>
 </html>
